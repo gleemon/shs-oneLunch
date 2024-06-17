@@ -1,0 +1,58 @@
+var debug = true;
+var summerMode = false;
+const logSheetId = "1fU0l8MbHr4mhsLhFiFBhR6g7jUzDZVuQVyh-vR2y2g0";
+
+function onFormSubmit(e) {
+  // Your existing code for date validation and logging form submissions...
+  // ... (assuming you already have the code for date validation and logging)
+  disableByTime();
+}
+
+function disableByTime() {
+  // Replace with your Google Sheets ID
+  var form = FormApp.getActiveForm();
+  var timeZone = Session.getScriptTimeZone();
+  var today = new Date();
+  var day = today.getDay();
+  var hour = today.getHours();
+  var minutes = today.getMinutes();
+  var closeStartHour = 9;
+  var closeStartMin =00;
+  var openStartHour = 14;
+  var openStartMin = 27;
+  var formStatus=form.isAcceptingResponses;
+
+  // Check if summer mode is enabled or time-based restriction applies
+    var ckDay = day >= 1 && day <= 5;
+    var ckHour = (((hour == openStartHour && minutes >= openStartMin) || hour > openStartHour) && hour < closeStartHour));
+  if (summerMode || ((day >= 1 && day <= 5) && (((hour == closeStartHour && minutes >= closeStartMin) || hour > closeStartHour) && hour < openStartHour))) {
+
+    if (form.isAcceptingResponses()) {
+      logStatusChangeToSheet("Status: Form disabled for submissions by script. " + (summerMode ? "Summer mode set." : "Weekday between 9:00 AM to 1:00 PM"));
+      form.setAcceptingResponses(false);
+      var offlineMessage;
+      if (summerMode) {
+        offlineMessage = "The form is currently offline for the summer. Have a great summer and we'll see you next year!";
+      } else {
+        offlineMessage = "The form is currently offline for submissions from " + closeStartHour + ":" + closeStartMin +" to " +  openStartHour + ":" + openStartMin + ", Monday to Friday. This form will reopen after " +  openStartHour + ":" + openStartMin;
+      }
+      form.setCustomClosedFormMessage(offlineMessage);
+    }
+  } else {
+    if (!form.isAcceptingResponses()) {
+      logStatusChangeToSheet("Status: Form enabled for submissions by script.");
+      form.setAcceptingResponses(true);
+      form.setCustomClosedFormMessage("");
+    }
+  }
+}
+
+function logStatusChangeToSheet(status, isDebug = false) {
+  if (debug || isDebug) { // Log only if debug flag is set (or isDebug argument is true)
+    var logSheet = SpreadsheetApp.openById(logSheetId);
+    var sheet = logSheet.getSheetByName(isDebug ? "Debug" : "Log"); // Use appropriate sheet based on debug flag
+    var rowData = [new Date(), status];
+    sheet.appendRow(rowData);
+  }
+}
+// JavaScript Document
