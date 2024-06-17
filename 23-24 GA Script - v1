@@ -1,0 +1,54 @@
+function onFormSubmit(e) {
+  //logFormStatusChange();
+  // Your existing code for date validation and logging form submissions...
+  // ... (assuming you already have the code for date validation and logging)
+}
+
+function disableByTime() {
+  var summerDisable = true;
+  var form = FormApp.getActiveForm();
+  var timeZone = Session.getScriptTimeZone();
+  var today = new Date();
+  var day = today.getDay();
+  var hour = today.getHours();
+  var minutes = today.getMinutes();
+  // Replace with your Google Sheets ID
+  var logSheetId = "1fU0l8MbHr4mhsLhFiFBhR6g7jUzDZVuQVyh-vR2y2g0";
+
+if (!summerDisable){
+  // Disable form submissions from Monday to Friday between 9:00 AM and 1:00 PM
+  if ((day >= 1 && day <= 5) && (((hour == 9 && minutes >= 00) || hour > 9) && hour < 13)) {
+    if (form.isAcceptingResponses()) {
+      logStatusChangeToSheet("Status: Form disabled for submissions by script.");
+      form.setAcceptingResponses(false);
+      var offlineMessage = "The form is currently offline for submissions from 9:00 AM to 1:00 PM, Monday to Friday. This form will reopen by 1:15 PM daily.";
+      form.setCustomClosedFormMessage(offlineMessage);
+    }
+  } else {
+    if (!form.isAcceptingResponses()) {
+      logStatusChangeToSheet("Status: Form enabled for submissions by script.");
+      form.setAcceptingResponses(true);
+      form.setCustomClosedFormMessage("");
+    }
+  }
+} else {
+      if (form.isAcceptingResponses()) {
+      logStatusChangeToSheet("Status: Form disabled for submissions by script.  Offline for summertime!");
+      form.setAcceptingResponses(false);
+      var offlineMessage = "The form is currently offline for the summer.  Have a great summer and we'll see you next year!";
+      form.setCustomClosedFormMessage(offlineMessage);
+}
+}
+// Function to log the status change to the specified Google Sheets document
+function logStatusChangeToSheet(status) {
+  var logSheet = SpreadsheetApp.openById(logSheetId);
+  var sheet = logSheet.getSheetByName("Log"); // Change sheet name if different
+  var rowData = [new Date(), status];
+  sheet.appendRow(rowData);
+}
+
+}
+// function disabled for the summer.  Uncomment the function below to enable this.
+function logFormStatusChange() {
+  // disableByTime();
+}// JavaScript Document
